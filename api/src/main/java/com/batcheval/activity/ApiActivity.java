@@ -40,7 +40,9 @@ public final class ApiActivity {
             BatchIngestBusiness business = new BatchIngestBusiness(config, jobDao, s3Accessor);
             Javalin app = createApp(config, business);
             app.start(config.apiPort());
+            Runtime.getRuntime().addShutdownHook(new Thread(app::stop));
             log.info("API listening on port {}", config.apiPort());
+            Thread.currentThread().join();
         }
     }
 
