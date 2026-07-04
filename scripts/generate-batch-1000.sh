@@ -3,7 +3,7 @@
 set -euo pipefail
 
 OUT="${1:-batch-1000.jsonl}"
-MODEL="${2:-meta-llama-3-8b-instruct}"
+MODEL="${2:-deepseek-4-flash}"
 
 : > "$OUT"
 for i in $(seq 0 999); do
