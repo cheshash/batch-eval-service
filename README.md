@@ -53,7 +53,46 @@ curl http://localhost:8000/v1/batches/<job_id>/results
 ```bash
 mvn verify
 docker compose up --build
+./scripts/e2e-smoke.sh
 ```
+
+### 1000-prompt batch file
+
+```bash
+chmod +x scripts/generate-batch-1000.sh
+./scripts/generate-batch-1000.sh batch-1000.jsonl
+
+curl -X POST http://localhost:8000/v1/batches -F "file=@batch-1000.jsonl"
+```
+
+Max rows per file: `MAX_REQUESTS_PER_FILE=1000` in `config/batch-eval.cfg`.
+
+## CI/CD (GitHub Actions)
+
+| Workflow | Trigger | What it does |
+|----------|---------|--------------|
+| `ci.yml` | PR + push | `mvn verify` |
+| `deploy.yml` | push to `main`/`master` | test → SSH deploy to droplet |
+
+### One-time setup: GitHub secrets
+
+Repo → **Settings → Secrets and variables → Actions → New repository secret**
+
+| Secret | Value |
+|--------|--------|
+| `DROPLET_HOST` | Droplet IP (e.g. `137.184.202.86`) |
+| `DROPLET_USER` | SSH user (e.g. `root`) |
+| `DROPLET_SSH_KEY` | Private SSH key (full PEM contents) |
+
+On the droplet, clone the repo once:
+
+```bash
+git clone https://github.com/YOUR_USERNAME/batch-eval-service.git ~/batch-eval-service
+cd ~/batch-eval-service && docker compose up --build -d
+```
+
+Every push to `main` runs tests then `git pull` + `docker compose up --build -d` on the droplet.
+
 
 ## Config
 

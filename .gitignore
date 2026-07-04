@@ -1,0 +1,9 @@
+target/
+*.db
+.env
+.env.*
+!.env.example
+.idea/
+*.iml
+.vscode/
+batch-1000.jsonl

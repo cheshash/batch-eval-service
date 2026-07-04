@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.batcheval.model.DomainModelTest
 -------------------------------------------------------------------------------
-Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.159 s -- in com.batcheval.model.DomainModelTest
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.160 s -- in com.batcheval.model.DomainModelTest
