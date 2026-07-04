@@ -35,6 +35,8 @@ services:
   worker:
     build: .
     command: java -jar /app/worker.jar
+    env_file:
+      - .env
     environment:
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
@@ -42,13 +44,13 @@ services:
       DATABASE_URL: jdbc:sqlite:/data/batch_eval.db
       AWS_ENDPOINT_URL: http://localstack:4566
       SQS_QUEUE_URL: http://localstack:4566/000000000000/batch-eval-jobs
-      PROMPT_ENDPOINT_URL: http://mock-prompt:9000/v1/evaluate
+      PROMPT_ENDPOINT_URL: ${PROMPT_ENDPOINT_URL:-http://mock-prompt:9000/v1/evaluate}
+      PROMPT_API_KEY: ${GRADIENT_MODEL_ACCESS_KEY:-}
     volumes:
       - batch-data:/data
       - ./config:/app/config:ro
     depends_on:
       - localstack
-      - mock-prompt
       - api
 
 volumes:

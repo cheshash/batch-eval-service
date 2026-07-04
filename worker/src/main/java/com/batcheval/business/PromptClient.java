@@ -2,6 +2,7 @@ package com.batcheval.business;
 
 import com.batcheval.config.AppConfig;
 import com.batcheval.model.BatchOutputLine.RowError;
+import com.batcheval.model.ModelAliases;
 import com.batcheval.model.RowErrorCode;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -11,6 +12,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -45,10 +47,7 @@ public class PromptClient {
     }
 
     public PromptResult evaluate(String model, String prompt, Map<String, Object> metadata) throws PromptException {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("model", model);
-        payload.put("prompt", prompt);
-        payload.put("metadata", metadata == null ? Map.of() : metadata);
+        Map<String, Object> payload = buildPayload(model, prompt, metadata);
 
         int attempts = 0;
         Integer lastStatus = null;
@@ -59,13 +58,15 @@ public class PromptClient {
             HttpResponse<String> response;
             try {
                 String body = com.batcheval.util.Json.mapper().writeValueAsString(payload);
-                HttpRequest request = HttpRequest.newBuilder()
+                HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                         .uri(config.promptEndpointUrl())
                         .timeout(config.promptTimeout())
                         .header("Content-Type", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofString(body))
-                        .build();
-                response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                        .POST(HttpRequest.BodyPublishers.ofString(body));
+                if (config.useOpenAiPromptApi()) {
+                    requestBuilder.header("Authorization", "Bearer " + config.promptApiKey());
+                }
+                response = httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
             } catch (IOException ex) {
                 throw new PromptException(RowError.of(
                         RowErrorCode.CONNECTION_ERROR, ex.getMessage(), null, attempts));
@@ -110,7 +111,7 @@ public class PromptClient {
                 ));
             }
 
-            return new PromptResult(parseJson(response.body()), latencyMs);
+            return new PromptResult(parseResponse(response.body()), latencyMs);
         }
 
         throw new PromptException(RowError.of(
@@ -119,6 +120,20 @@ public class PromptClient {
                 lastStatus,
                 attempts
         ));
+    }
+
+    private Map<String, Object> buildPayload(String model, String prompt, Map<String, Object> metadata) {
+        if (config.useOpenAiPromptApi()) {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("model", ModelAliases.resolve(model));
+            payload.put("messages", List.of(Map.of("role", "user", "content", prompt)));
+            return payload;
+        }
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("model", model);
+        payload.put("prompt", prompt);
+        payload.put("metadata", metadata == null ? Map.of() : metadata);
+        return payload;
     }
 
     private void sleep(double seconds) throws PromptException {
@@ -131,11 +146,24 @@ public class PromptClient {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> parseJson(String body) {
+    private Map<String, Object> parseResponse(String body) {
         try {
             JsonNode node = com.batcheval.util.Json.mapper().readTree(body);
-            return com.batcheval.util.Json.mapper().convertValue(node, Map.class);
+            if (node.has("choices") && node.get("choices").isArray() && !node.get("choices").isEmpty()) {
+                JsonNode message = node.get("choices").get(0).path("message");
+                String content = message.path("content").asText(null);
+                if (content != null) {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("output", content);
+                    if (node.has("model")) {
+                        result.put("model", node.get("model").asText());
+                    }
+                    return result;
+                }
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = com.batcheval.util.Json.mapper().convertValue(node, Map.class);
+            return map;
         } catch (Exception ex) {
             return Map.of("text", body);
         }
@@ -144,6 +172,9 @@ public class PromptClient {
     private String extractMessage(HttpResponse<String> response) {
         try {
             JsonNode node = com.batcheval.util.Json.mapper().readTree(response.body());
+            if (node.has("error") && node.get("error").has("message")) {
+                return node.get("error").get("message").asText();
+            }
             if (node.has("message")) {
                 return node.get("message").asText();
             }

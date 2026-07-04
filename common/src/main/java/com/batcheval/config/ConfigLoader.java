@@ -56,7 +56,8 @@ public final class ConfigLoader {
             "RESULT_RETENTION_DAYS", "PROMPT_ENDPOINT_URL", "PROMPT_TIMEOUT_SECONDS",
             "MAX_RETRY_ATTEMPTS", "RETRY_BASE_DELAY_SECONDS", "RETRY_MAX_DELAY_SECONDS",
             "WORKER_MAX_CONCURRENCY", "WORKER_POLL_WAIT_SECONDS", "WORKER_VISIBILITY_TIMEOUT",
-            "MAX_FILE_SIZE_BYTES", "MAX_REQUESTS_PER_FILE", "PRIORITY_MODEL"
+            "MAX_FILE_SIZE_BYTES", "MAX_REQUESTS_PER_FILE", "PRIORITY_MODEL",
+            "PROMPT_API_KEY"
     );
 
     private static void applyEnvOverrides(Map<String, String> values) {
@@ -64,6 +65,12 @@ public final class ConfigLoader {
             String value = System.getenv(key);
             if (value != null && !value.isBlank()) {
                 values.put(key, value.trim());
+            }
+        }
+        if (!values.containsKey("PROMPT_API_KEY") || values.get("PROMPT_API_KEY").isBlank()) {
+            String gradientKey = System.getenv("GRADIENT_MODEL_ACCESS_KEY");
+            if (gradientKey != null && !gradientKey.isBlank()) {
+                values.put("PROMPT_API_KEY", gradientKey.trim());
             }
         }
     }

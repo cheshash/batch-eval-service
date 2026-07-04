@@ -7,6 +7,7 @@
 /workspaces/batch-eval-service/common/src/main/java/com/batcheval/model/BatchJobResponse.java
 /workspaces/batch-eval-service/common/src/main/java/com/batcheval/model/BatchOutputLine.java
 /workspaces/batch-eval-service/common/src/main/java/com/batcheval/model/JobStatus.java
+/workspaces/batch-eval-service/common/src/main/java/com/batcheval/model/ModelAliases.java
 /workspaces/batch-eval-service/common/src/main/java/com/batcheval/model/ModelPriority.java
 /workspaces/batch-eval-service/common/src/main/java/com/batcheval/model/RowErrorCode.java
 /workspaces/batch-eval-service/common/src/main/java/com/batcheval/model/RowStatus.java

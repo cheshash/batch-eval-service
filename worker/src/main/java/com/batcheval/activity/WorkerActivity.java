@@ -39,7 +39,10 @@ public final class WorkerActivity {
             PromptClient promptClient = new PromptClient(config);
             BatchProcessBusiness business = new BatchProcessBusiness(config, jobDao, s3Accessor, promptClient);
 
-            log.info("worker started (concurrency={}, queue={})", config.workerMaxConcurrency(), config.sqsQueueUrl());
+            log.info("worker started (concurrency={}, queue={}, prompt={})",
+                    config.workerMaxConcurrency(),
+                    config.sqsQueueUrl(),
+                    config.useOpenAiPromptApi() ? "gradient-ai" : "mock");
 
             while (running) {
                 for (Message message : sqsAccessor.receive()) {

@@ -93,6 +93,37 @@ cd ~/batch-eval-service && docker compose up --build -d
 
 Every push to `main` runs tests then `git pull` + `docker compose up --build -d` on the droplet.
 
+## Real AI (DigitalOcean Gradient)
+
+By default the worker calls **mock-prompt**. For **real LLM inference**:
+
+1. Create a [Gradient model access key](https://cloud.digitalocean.com/gen-ai/model-access-keys)
+2. On the droplet, edit `.env`:
+
+```env
+GRADIENT_MODEL_ACCESS_KEY=your-key-here
+PROMPT_ENDPOINT_URL=https://inference.do-ai.run/v1/chat/completions
+```
+
+3. Rebuild worker only:
+
+```bash
+docker compose up --build -d worker
+```
+
+4. Submit a **small** batch first (3 rows), not 1000 — real API has rate limits and cost:
+
+```bash
+curl -X POST http://localhost:8000/v1/batches -F "file=@sample_batch.jsonl"
+```
+
+Input `model` values like `meta-llama-3-8b-instruct` are mapped to DO's `llama3-8b-instruct` automatically.
+
+| Mode | `PROMPT_API_KEY` | Endpoint |
+|------|------------------|----------|
+| Mock (default) | empty | `http://mock-prompt:9000/v1/evaluate` |
+| Real AI | set | `https://inference.do-ai.run/v1/chat/completions` |
+
 
 ## Config
 

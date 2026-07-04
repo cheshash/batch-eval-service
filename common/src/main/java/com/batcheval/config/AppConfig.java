@@ -16,6 +16,7 @@ public record AppConfig(
         int resultRetentionDays,
         URI promptEndpointUrl,
         Duration promptTimeout,
+        String promptApiKey,
         int maxRetryAttempts,
         double retryBaseDelaySeconds,
         double retryMaxDelaySeconds,
@@ -50,6 +51,7 @@ public record AppConfig(
                 getInt(cfg, "RESULT_RETENTION_DAYS", 90),
                 URI.create(getString(cfg, "PROMPT_ENDPOINT_URL", "http://localhost:9000/v1/evaluate")),
                 Duration.ofSeconds(getInt(cfg, "PROMPT_TIMEOUT_SECONDS", 60)),
+                getOptionalString(cfg, "PROMPT_API_KEY"),
                 getInt(cfg, "MAX_RETRY_ATTEMPTS", 5),
                 getDouble(cfg, "RETRY_BASE_DELAY_SECONDS", 1.0),
                 getDouble(cfg, "RETRY_MAX_DELAY_SECONDS", 60.0),
@@ -57,9 +59,19 @@ public record AppConfig(
                 getInt(cfg, "WORKER_POLL_WAIT_SECONDS", 20),
                 getInt(cfg, "WORKER_VISIBILITY_TIMEOUT", 300),
                 getLong(cfg, "MAX_FILE_SIZE_BYTES", 200L * 1024 * 1024),
-                getInt(cfg, "MAX_REQUESTS_PER_FILE", 50_000),
+                getInt(cfg, "MAX_REQUESTS_PER_FILE", 1000),
                 getString(cfg, "PRIORITY_MODEL", "meta-llama-3-8b-instruct")
         );
+    }
+
+    /** True when {@link #promptApiKey()} is set — uses OpenAI chat-completions format. */
+    public boolean useOpenAiPromptApi() {
+        return promptApiKey != null && !promptApiKey.isBlank();
+    }
+
+    private static String getOptionalString(Map<String, String> cfg, String key) {
+        String value = cfg.get(key);
+        return value == null || value.isBlank() ? null : value;
     }
 
     private static String getString(Map<String, String> cfg, String key, String defaultValue) {

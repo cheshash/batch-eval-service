@@ -28,7 +28,7 @@ class ApiActivityTest {
                 "test-bucket", "http://localhost/queue",
                 Duration.ofMinutes(15), 90,
                 URI.create("http://localhost:9000/v1/evaluate"),
-                Duration.ofSeconds(60), 5, 1.0, 60.0, 4, 20, 300,
+                Duration.ofSeconds(60), null, 5, 1.0, 60.0, 4, 20, 300,
                 1024 * 1024, 1000, "meta-llama-3-8b-instruct"
         );
         jobDao = new JobDao(config);
