@@ -1,0 +1,55 @@
+services:
+  localstack:
+    image: localstack/localstack:3
+    ports:
+      - "4566:4566"
+    environment:
+      SERVICES: s3,sqs
+      DEFAULT_REGION: us-east-1
+
+  mock-prompt:
+    build: ./mock-prompt
+    ports:
+      - "9000:9000"
+
+  api:
+    build: .
+    command: java -jar /app/api.jar
+    ports:
+      - "8000:8000"
+    environment:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+      DATABASE_URL: jdbc:sqlite:/data/batch_eval.db
+      AWS_ENDPOINT_URL: http://localstack:4566
+      SQS_QUEUE_URL: http://localstack:4566/000000000000/batch-eval-jobs
+      PROMPT_ENDPOINT_URL: http://mock-prompt:9000/v1/evaluate
+    volumes:
+      - batch-data:/data
+      - ./config:/app/config:ro
+    depends_on:
+      - localstack
+      - mock-prompt
+
+  worker:
+    build: .
+    command: java -jar /app/worker.jar
+    environment:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+      DATABASE_URL: jdbc:sqlite:/data/batch_eval.db
+      AWS_ENDPOINT_URL: http://localstack:4566
+      SQS_QUEUE_URL: http://localstack:4566/000000000000/batch-eval-jobs
+      PROMPT_ENDPOINT_URL: http://mock-prompt:9000/v1/evaluate
+    volumes:
+      - batch-data:/data
+      - ./config:/app/config:ro
+    depends_on:
+      - localstack
+      - mock-prompt
+      - api
+
+volumes:
+  batch-data:

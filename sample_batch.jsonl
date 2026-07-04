@@ -1,0 +1,3 @@
+{"request_id": "eval-001", "model": "meta-llama-3-8b-instruct", "prompt": "Summarize the benefits of async batch processing.", "metadata": {"source": "sample"}}
+{"request_id": "eval-002", "model": "meta-llama-3-70b-instruct", "prompt": "List three evaluation metrics for LLM outputs.", "metadata": {"source": "sample"}}
+{"request_id": "eval-003", "model": "meta-llama-3-8b-instruct", "prompt": "Explain rate limiting with exponential backoff.", "metadata": {"source": "sample"}}

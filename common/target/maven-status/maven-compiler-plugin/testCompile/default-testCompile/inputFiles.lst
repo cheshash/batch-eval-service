@@ -1,0 +1,3 @@
+/workspaces/batch-eval-service/common/src/test/java/com/batcheval/config/ConfigLoaderTest.java
+/workspaces/batch-eval-service/common/src/test/java/com/batcheval/model/DomainModelTest.java
+/workspaces/batch-eval-service/common/src/test/java/com/batcheval/model/ModelPriorityTest.java
